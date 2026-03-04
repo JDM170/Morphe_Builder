@@ -12,13 +12,10 @@ jobs:
     steps:
       - uses: actions/checkout@main
 
-      - name: Install AngleSharp
-        run: |
-          Install-Package AngleSharp -Source https://www.nuget.org/api/v2 -SkipDependencies -Force
-          New-Item -Path Temp -ItemType Directory -Force
-
       - name: Download and expanding Zulu JDK
         run: |
+          New-Item -Path Morphe -ItemType Directory -Force
+
           . Scripts\Zulu_JDK.ps1
 
       - name: Download Morphe CLI
@@ -43,29 +40,28 @@ jobs:
         if: ${{ env.KEYSTORE != '' }}
         run: |
           [byte[]]$bytes = [convert]::FromBase64String('${{ env.KEYSTORE }}')
-          [System.IO.File]::WriteAllBytes("Temp\morphe.keystore", $bytes)
+          [System.IO.File]::WriteAllBytes("Morphe\morphe.keystore", $bytes)
 
       - name: Build
         run: |
-          $JavaPath = (Resolve-Path -Path "Temp\jdk_windows-x64_bin\zulu*win_x64\bin\java.exe").Path
+          $JavaPath = (Resolve-Path -Path "Morphe\jdk_windows-x64_bin\zulu*win_x64\bin\java.exe").Path
 
           & $JavaPath `
-          -jar "Temp\morphe-cli.jar" patch `
-          --patches "Temp\morphe-patches.mpp" `
+          -jar "Morphe\morphe-cli.jar" patch `
+          --patches "Morphe\morphe-patches.mpp" `
           --disable "Alternative thumbnails" `
           --disable "Custom branding" `
           --disable "Change header" `
           --disable "Shorts autoplay" `
           --disable "Theme" `
           --purge `
-          --out "Temp\morphe.apk" `
-          "Temp\youtube.apk"
+          --out "Morphe\morphe.apk" `
+          "Morphe\youtube.apk"
 
       - name: Create archive
         run: |
-          Get-ChildItem Temp\Temp -Recurse -Force
           $Parameters = @{
-              Path             = "Temp\morphe.apk", "Temp\microg.apk"
+              Path             = "Morphe\morphe.apk", "Morphe\microg.apk"
               DestinationPath  = "Morphe.zip"
               CompressionLevel = "Fastest"
               Force            = $true
@@ -88,4 +84,3 @@ jobs:
           tag_name: ${{ env.RELEASE_NAME }}
           body_path: ${{ steps.read_release.outputs.ReleaseBody }}
           files: Morphe.zip
-

@@ -9,7 +9,7 @@ $URL = ($apiResult.assets | Where-Object -FilterScript {$_.content_type -eq "app
 $TAG = $apiResult.tag_name
 $Parameters = @{
     Uri             = $URL
-    Outfile         = "Temp\morphe-patches.mpp"
+    Outfile         = "Morphe\morphe-patches.mpp"
     UseBasicParsing = $true
     Verbose         = $true
 }
