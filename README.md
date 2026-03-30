@@ -42,5 +42,5 @@ Trigger the [`Build`](https://github.com/JDM170/Morphe_Builder/actions/workflows
 * [Morphe Patches](https://github.com/MorpheApp/morphe-patches)
 * [Morphe MicroG](https://github.com/MorpheApp/MicroG-RE)
 * [AngleSharp](https://github.com/AngleSharp/AngleSharp)
-* [Selenium](https://github.com/SeleniumHQ/selenium))
+* [Selenium](https://github.com/SeleniumHQ/selenium)
 * [Zulu JDK](https://github.com/ScoopInstaller/Java)
