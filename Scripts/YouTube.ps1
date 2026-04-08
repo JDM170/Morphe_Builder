@@ -2,10 +2,10 @@
 $JavaPath = (Resolve-Path -Path "Morphe\jdk_windows-x64_bin\zulu*win_x64\bin\java.exe").Path
 $patches_list = & $JavaPath `
 -jar "Morphe\morphe-cli.jar" list-patches `
+--patches "Morphe\morphe-patches.mpp" `
 --with-packages `
 --with-versions `
---patches "Morphe\morphe-patches.mpp" `
--f "com.google.android.youtube"
+--filter-package-name "com.google.android.youtube"
 $LatestSupported = [regex]::Matches($patches_list, "\d{2}\.\d{2}\.\d{2}") | ForEach-Object { $_.Value } | Sort-Object -Descending -Unique | Select-Object -First 1
 $LatestSupportedYT = $LatestSupported.Replace('.', '-')
 
