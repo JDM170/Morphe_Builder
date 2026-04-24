@@ -5,6 +5,9 @@ on:
     - cron: "30 3 1 * *"
   workflow_dispatch:
 
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 jobs:
   youtube:
     runs-on: windows-latest
@@ -173,7 +176,7 @@ jobs:
           name: Reddit
 
       - name: Create Release Notes
-        id: read_release
+        id: release_notes
         run: |
           # https://en.wikipedia.org/wiki/Percent-encoding
           (Get-Content -Path ReleaseNotesTemplate.md -Encoding utf8 -Raw).replace("MorpheCli", "${{ needs.youtube.outputs.cli }}")
@@ -194,7 +197,7 @@ jobs:
         uses: softprops/action-gh-release@v2.2.1
         with:
           tag_name: ${{ env.RELEASE_NAME }}
-          body_path: ${{ steps.read_release.outputs.ReleaseBody }}
+          body_path: ${{ steps.release_notes.outputs.ReleaseBody }}
           files: |
             Youtube.zip
             reddit.apk
