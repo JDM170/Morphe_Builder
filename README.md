@@ -1,12 +1,12 @@
 <a href="https://github.com/JDM170/Morphe_Builder/actions"><img src="https://img.shields.io/github/actions/workflow/status/JDM170/Morphe_Builder/Build.yml?label=GitHub%20Actions&logo=GitHub"></a>
 
 # Morphe builder
-Build Morphe package (.apk) easily than ever using latest Morphe patches and dependencies locally or via cloud
+Build packages (.apk) easily than ever using latest ReVanced & Morphe patches and dependencies locally or via cloud
 
 ## Usage
 
 ### Locally
-* To build YouTube or Reddit locally you need just to run [`Build_Youtube.ps1`](https://github.com/JDM170/Morphe_Builder/blob/main/Build_Youtube.ps1) or [`Build_Reddit.ps1`](https://github.com/JDM170/Morphe_Builder/blob/main/Build_Reddit.ps1) via PowerShell;
+* To build YouTube or Reddit locally you need just to run [`Youtube_ReVanced.ps1`](https://github.com/JDM170/Morphe_Builder/blob/main/Youtube_ReVanced.ps1) OR [`Youtube_Morphe.ps1`](https://github.com/JDM170/Morphe_Builder/blob/main/Youtube_Morphe.ps1) OR [`Reddit.ps1`](https://github.com/JDM170/Morphe_Builder/blob/main/Local_Scripts/Reddit.ps1) via PowerShell;
 * All patches except the followings applied to Youtube:
   * Custom branding
   * Change header
@@ -32,15 +32,19 @@ Every 1st of the month, releases are created automatically according to the sche
 Release notes are generated dynamically using the [ReleaseNotesTemplate.md](https://github.com/JDM170/ReVanced_Builder/blob/main/ReleaseNotesTemplate.md) template.
 
 The release will contain two files:
-`Youtube.zip` - `morphe-youtube.apk` and `microg.apk` - ready for installation/update.
-`Reddit.apk` - ready for installation/update.
+`Youtube-ReVanced.zip` - `youtube-revanced.apk`, `microg.apk` and `microg-hw.apk` (for Huawei devices) - ready for installation/update.
+`Youtube-Morphe.zip` - `youtube-morphe.apk` and `microg.apk` - ready for installation/update.
+`reddit.apk` - ready for installation/update.
 
 ## Links
 * [APKPure](https://apkpure.net)
 * [APKMirror](https://apkmirror.com)
+* [Zulu JDK](https://github.com/ScoopInstaller/Java)
+* [ReVanced CLI](https://github.com/revanced/revanced-cli)
+* [ReVanced Patches](https://github.com/revanced/revanced-patches)
+* [ReVanced MicroG](https://github.com/ReVanced/GmsCore)
 * [Morphe CLI](https://github.com/MorpheApp/morphe-cli)
 * [Morphe Patches](https://github.com/MorpheApp/morphe-patches)
 * [Morphe MicroG](https://github.com/MorpheApp/MicroG-RE)
 * [AngleSharp](https://github.com/AngleSharp/AngleSharp)
 * [Selenium](https://github.com/SeleniumHQ/selenium)
-* [Zulu JDK](https://github.com/ScoopInstaller/Java)
