@@ -101,13 +101,11 @@ foreach ($link in $links)
 {
     Write-Verbose -Message "Trying URL $link" -Verbose
     $driver.Navigate().GoToUrl($link)
-    # $ButtonTitle = $driver.FindElement([OpenQA.Selenium.By]::CssSelector("a.downloadButton"))
-    # $ButtonTitle.Text.Trim()
 
     $buttons = $driver.FindElements([OpenQA.Selenium.By]::CssSelector("a.downloadButton"))
     if ($buttons.Count -eq 0)
     {
-        Write-Verbose -Message "No download button found on $APKMirrorURL, skipping" -Verbose
+        Write-Verbose -Message "No download button found on $link, skipping" -Verbose
         continue
     }
     $button = $buttons[0]
