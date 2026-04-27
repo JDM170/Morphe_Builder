@@ -116,7 +116,7 @@ foreach ($link in $links)
     if (($buttonText -match "(?i)download apk") -and ($buttonText -notmatch "(?i)bundle"))
     {
         Write-Verbose -Message "Found 'DOWNLOAD APK' on $link" -Verbose
-        $DownloadURL = $ButtonTitle.GetAttribute("href")
+        $DownloadURL = $button.GetAttribute("href")
         break
     }
     Start-Sleep -Seconds 5
