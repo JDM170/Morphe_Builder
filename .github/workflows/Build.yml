@@ -2,27 +2,104 @@ name: Build
 
 on:
   schedule:
-    - cron: "30 3 1 * *"
+    - cron: "0 0 1 * *"
   workflow_dispatch:
 
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
-  youtube:
+  youtube_revanced:
     runs-on: windows-latest
     timeout-minutes: 10
     outputs:
       zulu: ${{ steps.zulu.outputs.ZuluTag }}
-      cli: ${{ steps.morphe_cli.outputs.CLIvtag }}
-      patches: ${{ steps.morphe_patches.outputs.Patchesvtag }}
-      youtube_microg: ${{ steps.morphe_microg.outputs.MicroGTag }}
+      cli: ${{ steps.revanced_cli.outputs.CLIvtag }}
+      patches: ${{ steps.revanced_patches.outputs.Patchesvtag }}
+      microg: ${{ steps.youtube_microg.outputs.MicroGTag }}
       youtube_app: ${{ steps.youtube_app.outputs.SupportedYoutube }}
     steps:
       - uses: actions/checkout@main
 
-      - name: Download and expanding Zulu JDK
+      - name: Download and expand Zulu JDK
         id: zulu
+        run: |
+          New-Item -Path ReVanced -ItemType Directory -Force
+
+          . Scripts\Zulu_JDK.ps1
+
+      - name: Download ReVanced CLI
+        id: revanced_cli
+        run: |
+          . Scripts\ReVanced\CLI.ps1
+
+      - name: Download ReVanced Patches
+        id: revanced_patches
+        run: |
+          . Scripts\ReVanced\Patches.ps1
+
+      - name: Download Vanced MicroG
+        id: youtube_microg
+        run: |
+          . Scripts\ReVanced\MicroG.ps1
+
+      - name: Download YouTube App
+        id: youtube_app
+        run: |
+          . Scripts\ReVanced\YouTube.ps1
+
+      - name: Add keystore from secrets
+        env:
+          KEYSTORE: ${{ secrets.REVANCED_KEYSTORE }}
+        if: ${{ env.KEYSTORE != '' }}
+        run: |
+          [byte[]]$bytes = [convert]::FromBase64String('${{ env.KEYSTORE }}')
+          [System.IO.File]::WriteAllBytes("ReVanced\revanced.keystore", $bytes)
+
+      - name: Build patched APK
+        run: |
+          $JavaPath = (Resolve-Path -Path "ReVanced\jdk_windows-x64_bin\zulu*win_x64\bin\java.exe").Path
+          & $JavaPath `
+          -jar "ReVanced\revanced-cli.jar" patch `
+          --patches "ReVanced\revanced-patches.rvp" `
+          --disable "Always repeat" `
+          --disable "Disable auto captions" `
+          --disable "Hide timestamp" `
+          --disable "Hide seekbar" `
+          --purge `
+          --out "ReVanced\youtube-revanced.apk" `
+          -b `
+          "ReVanced\youtube.apk"
+
+      - name: Create archive
+        run: |
+          $Parameters = @{
+              Path             = "ReVanced\youtube-revanced.apk", "ReVanced\microg.apk", "ReVanced\microg-hw.apk"
+              DestinationPath  = "Youtube-ReVanced.zip"
+              CompressionLevel = "Fastest"
+              Force            = $true
+          }
+          Compress-Archive @Parameters
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: YouTube-ReVanced
+          path: Youtube-ReVanced.zip
+          retention-days: 1
+
+  youtube_morphe:
+    runs-on: windows-latest
+    timeout-minutes: 10
+    outputs:
+      cli: ${{ steps.morphe_cli.outputs.CLIvtag }}
+      patches: ${{ steps.morphe_patches.outputs.Patchesvtag }}
+      youtube_microg: ${{ steps.youtube_microg.outputs.MicroGTag }}
+      youtube_app: ${{ steps.youtube_app.outputs.SupportedYoutube }}
+    steps:
+      - uses: actions/checkout@main
+
+      - name: Download and expand Zulu JDK
         run: |
           New-Item -Path Morphe -ItemType Directory -Force
 
@@ -31,22 +108,22 @@ jobs:
       - name: Download Morphe CLI
         id: morphe_cli
         run: |
-          . Scripts\Morphe_CLI.ps1
+          . Scripts\Morphe\CLI.ps1
 
       - name: Download Morphe Patches
         id: morphe_patches
         run: |
-          . Scripts\Morphe_Patches.ps1
+          . Scripts\Morphe\Patches.ps1
 
       - name: Download Morphe MicroG
-        id: morphe_microg
+        id: youtube_microg
         run: |
-          . Scripts\MicroG.ps1
+          . Scripts\Morphe\MicroG.ps1
 
-      - name: Download YouTube
+      - name: Download YouTube App
         id: youtube_app
         run: |
-          . Scripts\YouTube.ps1
+          . Scripts\Morphe\YouTube.ps1
 
       - name: Add keystore from secrets
         env:
@@ -56,10 +133,9 @@ jobs:
           [byte[]]$bytes = [convert]::FromBase64String('${{ env.KEYSTORE }}')
           [System.IO.File]::WriteAllBytes("Morphe\morphe.keystore", $bytes)
 
-      - name: Build
+      - name: Build patched APK
         run: |
           $JavaPath = (Resolve-Path -Path "Morphe\jdk_windows-x64_bin\zulu*win_x64\bin\java.exe").Path
-
           & $JavaPath `
           -jar "Morphe\morphe-cli.jar" patch `
           --patches "Morphe\morphe-patches.mpp" `
@@ -69,24 +145,24 @@ jobs:
           --disable "Shorts autoplay" `
           --disable "Theme" `
           --purge `
-          --out "Morphe\morphe-youtube.apk" `
+          --out "Morphe\youtube-morphe.apk" `
           "Morphe\youtube.apk"
 
       - name: Create archive
         run: |
           $Parameters = @{
-              Path             = "Morphe\morphe-youtube.apk", "Morphe\microg.apk"
-              DestinationPath  = "Youtube.zip"
+              Path             = "Morphe\youtube-morphe.apk", "Morphe\microg.apk"
+              DestinationPath  = "Youtube-Morphe.zip"
               CompressionLevel = "Fastest"
               Force            = $true
           }
           Compress-Archive @Parameters
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
-          name: YouTube
-          path: Youtube.zip
+          name: YouTube-Morphe
+          path: Youtube-Morphe.zip
           retention-days: 1
 
   reddit:
@@ -98,32 +174,29 @@ jobs:
     steps:
       - uses: actions/checkout@main
 
-      - name: Download and expanding Zulu JDK
-        id: zulu
+      - name: Download and expand Zulu JDK
         run: |
           New-Item -Path Morphe -ItemType Directory -Force
 
           . Scripts\Zulu_JDK.ps1
 
       - name: Download Morphe CLI
-        id: morphe_cli
         run: |
-          . Scripts\Morphe_CLI.ps1
+          . Scripts\Morphe\CLI.ps1
 
       - name: Download Morphe Patches
-        id: morphe_patches
         run: |
-          . Scripts\Morphe_Patches.ps1
+          . Scripts\Morphe\Patches.ps1
 
       - name: Download APKEditor
         id: apkeditor
         run: |
           . Scripts\APKEditor.ps1
 
-      - name: Download Reddit
+      - name: Download Reddit App
         id: reddit_app
         run: |
-          . Scripts\Reddit.ps1
+          . Scripts\Morphe\Reddit.ps1
 
       - name: Add keystore from secrets
         env:
@@ -136,16 +209,14 @@ jobs:
       - name: Merge APKM to APK
         run: |
           $JavaPath = (Resolve-Path -Path "Morphe\jdk_windows-x64_bin\zulu*win_x64\bin\java.exe").Path
-
           & $JavaPath `
           -jar "Morphe\apkeditor.jar" m `
           -i "Morphe\reddit.apkm" `
           -o "Morphe\merged.apk"
 
-      - name: Create patched APK
+      - name: Build patched APK
         run: |
           $JavaPath = (Resolve-Path -Path "Morphe\jdk_windows-x64_bin\zulu*win_x64\bin\java.exe").Path
-
           & $JavaPath `
           -jar "Morphe\morphe-cli.jar" patch `
           --patches "Morphe\morphe-patches.mpp" `
@@ -154,26 +225,31 @@ jobs:
           "Morphe\merged.apk"
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: Reddit
           path: Morphe/reddit.apk
           retention-days: 1
 
   release:
-    needs: [youtube, reddit]
+    needs: [youtube_revanced, youtube_morphe, reddit]
     runs-on: windows-latest
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@main
 
-      - name: Download YouTube artifact
-        uses: actions/download-artifact@v4
+      - name: Download YouTube ReVanced artifact
+        uses: actions/download-artifact@v7
         with:
-          name: YouTube
+          name: YouTube-ReVanced
+
+      - name: Download YouTube Morphe artifact
+        uses: actions/download-artifact@v7
+        with:
+          name: YouTube-Morphe
 
       - name: Download Reddit artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: Reddit
 
@@ -182,11 +258,15 @@ jobs:
         run: |
           # https://en.wikipedia.org/wiki/Percent-encoding
           (Get-Content -Path ReleaseNotesTemplate.md -Encoding utf8 -Raw).
-          replace("MorpheCli", "${{ needs.youtube.outputs.cli }}").
-          replace("MorphePatches", "${{ needs.youtube.outputs.patches }}").
-          replace("ZuluVersion", "${{ needs.youtube.outputs.zulu }}").
-          replace("YouTubeTag", "${{ needs.youtube.outputs.youtube_app }}").
-          replace("MicroGTag", "${{ needs.youtube.outputs.youtube_microg }}").
+          replace("ZuluVersion", "${{ needs.youtube_revanced.outputs.zulu }}").
+          replace("RevancedCli", "${{ needs.youtube_revanced.outputs.cli }}").
+          replace("RevancedPatches", "${{ needs.youtube_revanced.outputs.patches }}").
+          replace("RevancedYoutube", "${{ needs.youtube_revanced.outputs.youtube_app }}").
+          replace("RevancedMicroG", "${{ needs.youtube_revanced.outputs.youtube_microg }}").
+          replace("MorpheCli", "${{ needs.youtube_morphe.outputs.cli }}").
+          replace("MorphePatches", "${{ needs.youtube_morphe.outputs.patches }}").
+          replace("MorpheYoutube", "${{ needs.youtube_morphe.outputs.youtube_app }}").
+          replace("MorpheMicroG", "${{ needs.youtube_morphe.outputs.youtube_microg }}").
           replace("RedditTag", "${{ needs.reddit.outputs.reddit_app }}").
           replace("APKEditorTag", "${{ needs.reddit.outputs.apkeditor }}") | Set-Content -Path ReleaseNotesTemplate.md -Encoding utf8 -Force
 
@@ -202,5 +282,6 @@ jobs:
           tag_name: ${{ env.RELEASE_NAME }}
           body_path: ${{ steps.release_notes.outputs.ReleaseBody }}
           files: |
-            Youtube.zip
+            Youtube-ReVanced.zip
+            Youtube-Morphe.zip
             reddit.apk

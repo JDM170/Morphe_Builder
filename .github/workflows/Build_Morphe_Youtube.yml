@@ -1,0 +1,75 @@
+name: Build_Morphe_Youtube
+
+on:
+  workflow_dispatch:
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  youtube_morphe:
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@main
+
+      - name: Download and expand Zulu JDK
+        run: |
+          New-Item -Path Morphe -ItemType Directory -Force
+
+          . Scripts\Zulu_JDK.ps1
+
+      - name: Download Morphe CLI
+        run: |
+          . Scripts\Morphe\CLI.ps1
+
+      - name: Download Morphe Patches
+        run: |
+          . Scripts\Morphe\Patches.ps1
+
+      - name: Download Morphe MicroG
+        run: |
+          . Scripts\Morphe\MicroG.ps1
+
+      - name: Download YouTube App
+        run: |
+          . Scripts\Morphe\YouTube.ps1
+
+      - name: Add keystore from secrets
+        env:
+          KEYSTORE: ${{ secrets.MORPHE_KEYSTORE }}
+        if: ${{ env.KEYSTORE != '' }}
+        run: |
+          [byte[]]$bytes = [convert]::FromBase64String('${{ env.KEYSTORE }}')
+          [System.IO.File]::WriteAllBytes("Morphe\morphe.keystore", $bytes)
+
+      - name: Build patched APK
+        run: |
+          $JavaPath = (Resolve-Path -Path "Morphe\jdk_windows-x64_bin\zulu*win_x64\bin\java.exe").Path
+          & $JavaPath `
+          -jar "Morphe\morphe-cli.jar" patch `
+          --patches "Morphe\morphe-patches.mpp" `
+          --disable "Alternative thumbnails" `
+          --disable "Custom branding" `
+          --disable "Change header" `
+          --disable "Shorts autoplay" `
+          --disable "Theme" `
+          --purge `
+          --out "Morphe\youtube-morphe.apk" `
+          "Morphe\youtube.apk"
+
+      - name: Create archive
+        run: |
+          $Parameters = @{
+              Path             = "Morphe\youtube-morphe.apk", "Morphe\microg.apk"
+              DestinationPath  = "Youtube-Morphe.zip"
+              CompressionLevel = "Fastest"
+              Force            = $true
+          }
+          Compress-Archive @Parameters
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: YouTube-Morphe
+          path: Youtube-Morphe.zip

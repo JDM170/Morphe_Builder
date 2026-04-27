@@ -1,0 +1,75 @@
+name: Build_ReVanced_Youtube
+
+on:
+  workflow_dispatch:
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  youtube_revanced:
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@main
+
+      - name: Download and expand Zulu JDK
+        run: |
+          New-Item -Path ReVanced -ItemType Directory -Force
+
+          . Scripts\Zulu_JDK.ps1
+
+      - name: Download ReVanced CLI
+        run: |
+          . Scripts\ReVanced\CLI.ps1
+
+      - name: Download ReVanced Patches
+        run: |
+          . Scripts\ReVanced\Patches.ps1
+
+      - name: Download Vanced MicroG
+        run: |
+          . Scripts\ReVanced\MicroG.ps1
+
+      - name: Download YouTube App
+        run: |
+          . Scripts\ReVanced\YouTube.ps1
+
+      - name: Add keystore from secrets
+        env:
+          KEYSTORE: ${{ secrets.REVANCED_KEYSTORE }}
+        if: ${{ env.KEYSTORE != '' }}
+        run: |
+          [byte[]]$bytes = [convert]::FromBase64String('${{ env.KEYSTORE }}')
+          [System.IO.File]::WriteAllBytes("ReVanced\revanced.keystore", $bytes)
+
+      - name: Build patched APK
+        run: |
+          $JavaPath = (Resolve-Path -Path "ReVanced\jdk_windows-x64_bin\zulu*win_x64\bin\java.exe").Path
+          & $JavaPath `
+          -jar "ReVanced\revanced-cli.jar" patch `
+          --patches "ReVanced\revanced-patches.rvp" `
+          --disable "Always repeat" `
+          --disable "Disable auto captions" `
+          --disable "Hide timestamp" `
+          --disable "Hide seekbar" `
+          --purge `
+          --out "ReVanced\youtube-revanced.apk" `
+          -b `
+          "ReVanced\youtube.apk"
+
+      - name: Create archive
+        run: |
+          $Parameters = @{
+              Path             = "ReVanced\youtube-revanced.apk", "ReVanced\microg.apk", "ReVanced\microg-hw.apk"
+              DestinationPath  = "Youtube-ReVanced.zip"
+              CompressionLevel = "Fastest"
+              Force            = $true
+          }
+          Compress-Archive @Parameters
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: YouTube-ReVanced
+          path: Youtube-ReVanced.zip

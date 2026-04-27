@@ -1,0 +1,68 @@
+name: Build_Morphe_Reddit
+
+on:
+  workflow_dispatch:
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  reddit:
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@main
+
+      - name: Download and expand Zulu JDK
+        run: |
+          New-Item -Path Morphe -ItemType Directory -Force
+
+          . Scripts\Zulu_JDK.ps1
+
+      - name: Download Morphe CLI
+        run: |
+          . Scripts\Morphe\CLI.ps1
+
+      - name: Download Morphe Patches
+        run: |
+          . Scripts\Morphe\Patches.ps1
+
+      - name: Download APKEditor
+        run: |
+          . Scripts\APKEditor.ps1
+
+      - name: Download Reddit App
+        run: |
+          . Scripts\Morphe\Reddit.ps1
+
+      - name: Add keystore from secrets
+        env:
+          KEYSTORE: ${{ secrets.MORPHE_KEYSTORE }}
+        if: ${{ env.KEYSTORE != '' }}
+        run: |
+          [byte[]]$bytes = [convert]::FromBase64String('${{ env.KEYSTORE }}')
+          [System.IO.File]::WriteAllBytes("Morphe\morphe.keystore", $bytes)
+
+      - name: Merge APKM to APK
+        run: |
+          $JavaPath = (Resolve-Path -Path "Morphe\jdk_windows-x64_bin\zulu*win_x64\bin\java.exe").Path
+          & $JavaPath `
+          -jar "Morphe\apkeditor.jar" m `
+          -i "Morphe\reddit.apkm" `
+          -o "Morphe\merged.apk"
+
+      - name: Build patched APK
+        run: |
+          $JavaPath = (Resolve-Path -Path "Morphe\jdk_windows-x64_bin\zulu*win_x64\bin\java.exe").Path
+          & $JavaPath `
+          -jar "Morphe\morphe-cli.jar" patch `
+          --patches "Morphe\morphe-patches.mpp" `
+          --purge `
+          --out "Morphe\reddit.apk" `
+          "Morphe\merged.apk"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: Reddit
+          path: Morphe/reddit.apk
