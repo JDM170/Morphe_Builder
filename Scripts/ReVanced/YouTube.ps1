@@ -87,24 +87,36 @@ $Options.AddArgument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) App
 $driver = New-Object -TypeName OpenQA.Selenium.Edge.EdgeDriver("ReVanced\msedgedriver.exe", $Options)
 
 # https://www.apkmirror.com/apk/google-inc/youtube/
-$APKMirrorURL = "https://www.apkmirror.com/apk/google-inc/youtube/youtube-$($LatestSupportedYT)-release/youtube-$($LatestSupportedYT)-2-android-apk-download/"
+# Get right youtube link
+$links = @(
+    "https://www.apkmirror.com/apk/google-inc/youtube/youtube-$($LatestSupportedYT)-release/youtube-$($LatestSupportedYT)-android-apk-download/",
+    "https://www.apkmirror.com/apk/google-inc/youtube/youtube-$($LatestSupportedYT)-release/youtube-$($LatestSupportedYT)-1-android-apk-download/",
+    "https://www.apkmirror.com/apk/google-inc/youtube/youtube-$($LatestSupportedYT)-release/youtube-$($LatestSupportedYT)-2-android-apk-download/",
+    "https://www.apkmirror.com/apk/google-inc/youtube/youtube-$($LatestSupportedYT)-release/youtube-$($LatestSupportedYT)-3-android-apk-download/"
+    "https://www.apkmirror.com/apk/google-inc/youtube/youtube-$($LatestSupportedYT)-release/youtube-$($LatestSupportedYT)-4-android-apk-download/"
+)
+$DownloadURL = $null
 
-Write-Verbose -Message "Trying URL $APKMirrorURL" -Verbose
+foreach ($link in $links) {
+    Write-Verbose -Message "Trying URL $link" -Verbose
+    $driver.Navigate().GoToUrl($link)
+    $ButtonTitle = $driver.FindElement([OpenQA.Selenium.By]::CssSelector("a.downloadButton"))
+    $ButtonTitle.Text.Trim()
+    if (($ButtonTitle.Text.Trim() -match "(?i)download apk") -and ($ButtonTitle.Text.Trim() -notmatch "(?i)bundle"))
+    {
+        Write-Verbose -Message "Found 'DOWNLOAD APK' on $link" -Verbose
+        $DownloadURL = $ButtonTitle.GetAttribute("href")
+        break
+    }
+    Start-Sleep -Seconds 5
+}
 
-$driver.Navigate().GoToUrl($APKMirrorURL)
-$ButtonTitle = $driver.FindElement([OpenQA.Selenium.By]::CssSelector("a.downloadButton"))
-
-# Get button title. We need a NON-bundle version only
-$ButtonTitle.Text.Trim()
-
-if ($ButtonTitle.Text.Trim() -match "DOWNLOAD APK BUNDLE" || $ButtonTitle.Text.Trim() -match "Download APK Bundle")
-{
-    Write-Verbose -Message "$ButtonTitle.Text.Trim() matches 'BUNDLE'" -Verbose
+if ([string]::IsNullOrWhiteSpace($DownloadURL)) {
+    Write-Verbose -Message "No link with 'DOWNLOAD APK' found. Exiting." -Verbose
     $driver.Quit()
     exit
 }
 
-$DownloadURL = $ButtonTitle.GetAttribute("href")
 # Download youtube.apk
 # Waiting for Edge to finish downloading
 $driver.Navigate().GoToUrl($DownloadURL)
