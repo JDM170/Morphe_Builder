@@ -97,21 +97,23 @@ $links = @(
 )
 $DownloadURL = $null
 
-foreach ($link in $links) {
+foreach ($link in $links)
+{
     Write-Verbose -Message "Trying URL $link" -Verbose
     $driver.Navigate().GoToUrl($link)
     # $ButtonTitle = $driver.FindElement([OpenQA.Selenium.By]::CssSelector("a.downloadButton"))
     # $ButtonTitle.Text.Trim()
 
     $buttons = $driver.FindElements([OpenQA.Selenium.By]::CssSelector("a.downloadButton"))
-    if ($buttons.Count -eq 0) {
+    if ($buttons.Count -eq 0)
+    {
         Write-Verbose -Message "No download button found on $APKMirrorURL, skipping" -Verbose
         continue
     }
     $ButtonTitle = $buttons[0]
     $buttonText = $button.Text.Trim()
 
-    if (($buttonText -match "(?i)download apk") -and ($buttonText -notmatch "(?i)bundle")) {
+    if (($buttonText -match "(?i)download apk") -and ($buttonText -notmatch "(?i)bundle"))
     {
         Write-Verbose -Message "Found 'DOWNLOAD APK' on $link" -Verbose
         $DownloadURL = $ButtonTitle.GetAttribute("href")
@@ -120,7 +122,8 @@ foreach ($link in $links) {
     Start-Sleep -Seconds 5
 }
 
-if ([string]::IsNullOrWhiteSpace($DownloadURL)) {
+if ([string]::IsNullOrWhiteSpace($DownloadURL))
+{
     Write-Verbose -Message "No link with 'DOWNLOAD APK' found. Exiting." -Verbose
     $driver.Quit()
     exit
