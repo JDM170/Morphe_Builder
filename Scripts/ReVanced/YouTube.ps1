@@ -100,7 +100,15 @@ $DownloadURL = $null
 foreach ($link in $links) {
     Write-Verbose -Message "Trying URL $link" -Verbose
     $driver.Navigate().GoToUrl($link)
-    $ButtonTitle = $driver.FindElement([OpenQA.Selenium.By]::CssSelector("a.downloadButton"))
+    # $ButtonTitle = $driver.FindElement([OpenQA.Selenium.By]::CssSelector("a.downloadButton"))
+
+    $buttons = $driver.FindElements([OpenQA.Selenium.By]::CssSelector("a.downloadButton"))
+    if ($buttons.Count -eq 0) {
+        Write-Verbose -Message "No download button found on $APKMirrorURL, skipping" -Verbose
+        continue
+    }
+    $button = $buttons[0]
+
     $ButtonTitle.Text.Trim()
     if (($ButtonTitle.Text.Trim() -match "(?i)download apk") -and ($ButtonTitle.Text.Trim() -notmatch "(?i)bundle"))
     {
