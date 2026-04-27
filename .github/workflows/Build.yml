@@ -16,7 +16,7 @@ jobs:
       zulu: ${{ steps.zulu.outputs.ZuluTag }}
       cli: ${{ steps.revanced_cli.outputs.CLIvtag }}
       patches: ${{ steps.revanced_patches.outputs.Patchesvtag }}
-      microg: ${{ steps.youtube_microg.outputs.MicroGTag }}
+      youtube_microg: ${{ steps.youtube_microg.outputs.MicroGTag }}
       youtube_app: ${{ steps.youtube_app.outputs.SupportedYoutube }}
     steps:
       - uses: actions/checkout@main
