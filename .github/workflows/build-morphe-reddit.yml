@@ -65,7 +65,11 @@ jobs:
       - name: Build patched APK
         run: |
           $JavaPath = (Resolve-Path -Path "Morphe\jdk_windows-x64_bin\zulu*win_x64\bin\java.exe").Path
-          & $JavaPath -jar "Morphe\morphe-cli.jar" patch --patches "Morphe\morphe-patches.mpp" --purge --out "Morphe\reddit.apk" "Morphe\merged.apk"
+          & $JavaPath `
+          -jar "Morphe\morphe-cli.jar" patch `
+          --patches "Morphe\morphe-patches.mpp" `
+          --out "Morphe\reddit.apk" `
+          "Morphe\merged.apk"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v6

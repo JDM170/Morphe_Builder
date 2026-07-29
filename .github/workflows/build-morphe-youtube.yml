@@ -78,7 +78,6 @@ jobs:
           --disable "Change header" `
           --disable "Shorts autoplay" `
           --disable "Theme" `
-          --purge `
           --out "Morphe\youtube-morphe.apk" `
           "Morphe\youtube.apk"
 
