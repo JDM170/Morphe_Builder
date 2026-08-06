@@ -23,5 +23,4 @@
 ### Reddit Morphe
 * Reddit RedditTag;
 * Morphe CLI MorpheCli;
-* Morphe Patches MorphePatches;
-* APKEditor APKEditorTag.
+* Morphe Patches MorphePatches.

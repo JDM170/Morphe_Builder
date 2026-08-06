@@ -6,9 +6,6 @@ on:
       reddit_app:
         description: "Supported Reddit version"
         value: ${{ jobs.reddit.outputs.reddit_app }}
-      apkeditor:
-        description: "APKEditor version"
-        value: ${{ jobs.reddit.outputs.apkeditor }}
     secrets:
       MORPHE_KEYSTORE:
         required: true
@@ -23,7 +20,6 @@ jobs:
     timeout-minutes: 10
     outputs:
       reddit_app: ${{ steps.reddit_app.outputs.SupportedReddit }}
-      apkeditor: ${{ steps.apkeditor.outputs.ApkEditorTag }}
     steps:
       - uses: actions/checkout@v6
 
@@ -40,10 +36,6 @@ jobs:
       - name: Download Morphe Patches
         run: . Scripts\Morphe\Patches.ps1
 
-      - name: Download APKEditor
-        id: apkeditor
-        run: . Scripts\APKEditor.ps1
-
       - name: Download Reddit App
         id: reddit_app
         run: . Scripts\Morphe\Reddit.ps1
@@ -57,11 +49,6 @@ jobs:
           [byte[]]$bytes = [convert]::FromBase64String('${{ env.KEYSTORE }}')
           [System.IO.File]::WriteAllBytes("Morphe\morphe-data\morphe.keystore", $bytes)
 
-      - name: Merge APKM to APK
-        run: |
-          $JavaPath = (Resolve-Path -Path "Morphe\jdk_windows-x64_bin\zulu*win_x64\bin\java.exe").Path
-          & $JavaPath -jar "Morphe\apkeditor.jar" m -i "Morphe\reddit.apkm" -o "Morphe\merged.apk"
-
       - name: Build patched APK
         run: |
           $JavaPath = (Resolve-Path -Path "Morphe\jdk_windows-x64_bin\zulu*win_x64\bin\java.exe").Path
@@ -69,7 +56,7 @@ jobs:
           -jar "Morphe\morphe-cli.jar" patch `
           --patches "Morphe\morphe-patches.mpp" `
           --out "Morphe\reddit.apk" `
-          "Morphe\merged.apk"
+          "Morphe\reddit.apkm"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v6

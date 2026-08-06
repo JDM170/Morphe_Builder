@@ -56,8 +56,7 @@ jobs:
           replace("MorphePatches", "${{ needs.call_morphe.outputs.patches }}").
           replace("MorpheYoutube", "${{ needs.call_morphe.outputs.youtube_app }}").
           replace("MorpheMicroG", "${{ needs.call_morphe.outputs.youtube_microg }}").
-          replace("RedditTag", "${{ needs.call_reddit.outputs.reddit_app }}").
-          replace("APKEditorTag", "${{ needs.call_reddit.outputs.apkeditor }}") |
+          replace("RedditTag", "${{ needs.call_reddit.outputs.reddit_app }}") |
           Set-Content -Path ReleaseNotesTemplate.md -Encoding utf8 -Force
 
           Add-Content -Path $env:GITHUB_OUTPUT -Value "ReleaseBody=ReleaseNotesTemplate.md"
